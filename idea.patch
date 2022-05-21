@@ -272,16 +272,16 @@ index 07c1334b8..01d5910de 100644
 +                    Object[] locations = (Object[])getCaretLocations.invoke(editor, false);
 +                    Field point = locations[0].getClass().getField("myPoint");
 +                    Object myPoint = point.get(locations[0]);
-+                    if (myPoint instanceof Point) {
-+                        // convert to Point
-+                        Point p = (Point) myPoint;
-+                        caret_x = p.x;
-+                        caret_y = p.y;
++                    // shoule be Point or Point2D.Double
++                    // are subclass of Point2D
++                    if (myPoint instanceof Point2D) {
++                        // convert to Point2D
++                        Point2D p = (Point2D) myPoint;
++                        caret_x = (int) p.getX();
++                        caret_y = (int) p.getY();
 +                     } else {
-+                        // convert to Point2D.Double
-+                        Point2D.Double pd = (Point2D.Double) myPoint;
-+                        caret_x = (int)pd.x;
-+                        caret_y = (int)pd.y;
++                        // throw exception for unknown type
++                        throw new IllegalArgumentException("unknown type of myPoint: " + myPoint.getClass().getSimpleName())
 +                     }
 +                }
 +                
