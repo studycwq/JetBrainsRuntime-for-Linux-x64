@@ -281,7 +281,7 @@ index 07c1334b8..01d5910de 100644
 +                        caret_y = (int) p.getY();
 +                     } else {
 +                        // throw exception for unknown type
-+                        throw new IllegalArgumentException("unknown type of myPoint: " + myPoint.getClass().getSimpleName())
++                        throw new IllegalArgumentException("unknown type of myPoint: " + myPoint.getClass().getSimpleName());
 +                     }
 +                }
 +                
