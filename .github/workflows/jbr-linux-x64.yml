@@ -25,26 +25,9 @@ jobs:
             libgl1-mesa-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             libgtk2.0-dev libgtk-3-dev libjpeg-dev libpng-dev libudev-dev libx11-dev libxext-dev \
             libxml2-dev libxrandr-dev libxrender-dev libxslt1-dev libxt-dev libxtst-dev libxxf86vm-dev \
-            make mercurial pkg-config ruby tree x11proto-core-dev x11proto-xf86vidmode-dev zip
+            make mercurial openjdk-11-jdk pkg-config ruby tree x11proto-core-dev x11proto-xf86vidmode-dev zip
         sudo -E apt-get autoremove -y --purge
         sudo -E apt-get clean -y
-        
-    - name: Setup Java JDK 11
-      uses: actions/setup-java@v3.4.1
-      with:
-       java-version: 11
-       distribution: 'adopt'
-       
-    - name: Setup Env
-      id: setup_env
-      run: echo "JDK_11=$JAVA_HOME" >> $GITHUB_ENV
-    
-    - name: Setup Java JDK 17
-      uses: actions/setup-java@v3.4.1
-      with:
-       java-version: 17
-       distribution: 'zulu'
-
     - name: Generate Information
       id: gen_info
       env:
@@ -56,10 +39,9 @@ jobs:
         echo "##[set-output name=release_tag;]$release_tag"
         echo "##[set-output name=release_name;]$release_name"
         echo "##[set-output name=release_description;]$release_description"
-
     - name: Compile JCEF
       env:
-        #JDK_11: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64
+        JDK_11: /usr/lib/jvm/java-11-openjdk-amd64
         ANT_HOME: /usr/share/ant
       run: |
         git clone https://github.com/JetBrains/jcef.git jcef
@@ -93,11 +75,30 @@ jobs:
 
     - name: List Paths
       run: |
+        cd jcef
+        ls -a
+        echo
+        tree -a
+    - name: Patch & Compile JetBrainsRuntime with JCEF
+      env:
+        JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+        JDK_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+      run: |
+        git config --global core.autocrlf input
+        git clone -b master --single-branch https://github.com/JetBrains/JetBrainsRuntime.git
+        cd JetBrainsRuntime
+        mkdir jcef_linux_x64 && tar zxf ../jcef/jcef_linux_x64.tar.gz -C jcef_linux_x64
+        git apply -p0 < jb/project/tools/patches/add_jcef_module.patch
+        mv ../idea.patch ./
+        patch -p1 < idea.patch
+        sh ./configure --disable-warnings-as-errors --with-import-modules=./jcef_linux_x64/modular-sdk
+        make images
+    - name: List Paths
+      run: |
         cd JetBrainsRuntime
         ls -a
         echo
         tree -a
-
     - name: Reduce Size
       env:
         BASE_DIR: build/linux-x86_64-normal-server-release/images
@@ -115,13 +116,11 @@ jobs:
         grep -v "^JAVA_VERSION" ${BASE_DIR}/jdk/release | grep -v "^MODULES" >> $BASE_DIR/$JBR_BUNDLE/release
         rm -rf ${BASE_DIR}/jbr
         cp -R ${BASE_DIR}/${JBR_BUNDLE} ${BASE_DIR}/jbr
-
     - name: Package Artifact
       run: |
         cd JetBrainsRuntime/build/linux-x86_64-normal-server-release/images
         zip -r jbr-linux-x64.zip ./jbr/*
         mv jbr-linux-x64.zip ../../../../
-
     - name: Upload Artifact
       uses: actions/upload-artifact@master
       with:
