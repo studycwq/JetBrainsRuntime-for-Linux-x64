@@ -28,6 +28,7 @@ jobs:
             make mercurial openjdk-11-jdk pkg-config ruby tree x11proto-core-dev x11proto-xf86vidmode-dev zip
         sudo -E apt-get autoremove -y --purge
         sudo -E apt-get clean -y
+
     - name: Generate Information
       id: gen_info
       env:
@@ -39,6 +40,7 @@ jobs:
         echo "##[set-output name=release_tag;]$release_tag"
         echo "##[set-output name=release_name;]$release_name"
         echo "##[set-output name=release_description;]$release_description"
+
     - name: Compile JCEF
       env:
         JDK_11: /usr/lib/jvm/java-11-openjdk-amd64
@@ -59,27 +61,6 @@ jobs:
         tree -a
 
     - name: Patch & Compile JetBrainsRuntime with JCEF
-      #env:
-      #  JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64
-      #  JDK_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64
-      run: |
-        git config --global core.autocrlf input
-        git clone -b master --single-branch https://github.com/JetBrains/JetBrainsRuntime.git
-        cd JetBrainsRuntime
-        mkdir jcef_linux_x64 && tar zxf ../jcef/jcef_linux_x64.tar.gz -C jcef_linux_x64
-        git apply -p0 < jb/project/tools/patches/add_jcef_module.patch
-        mv ../idea.patch ./
-        patch -p1 < idea.patch
-        sh ./configure --disable-warnings-as-errors --with-import-modules=./jcef_linux_x64/modular-sdk
-        make images
-
-    - name: List Paths
-      run: |
-        cd jcef
-        ls -a
-        echo
-        tree -a
-    - name: Patch & Compile JetBrainsRuntime with JCEF
       env:
         JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
         JDK_HOME: /usr/lib/jvm/java-11-openjdk-amd64
@@ -93,12 +74,14 @@ jobs:
         patch -p1 < idea.patch
         sh ./configure --disable-warnings-as-errors --with-import-modules=./jcef_linux_x64/modular-sdk
         make images
+
     - name: List Paths
       run: |
         cd JetBrainsRuntime
         ls -a
         echo
         tree -a
+
     - name: Reduce Size
       env:
         BASE_DIR: build/linux-x86_64-normal-server-release/images
@@ -116,11 +99,13 @@ jobs:
         grep -v "^JAVA_VERSION" ${BASE_DIR}/jdk/release | grep -v "^MODULES" >> $BASE_DIR/$JBR_BUNDLE/release
         rm -rf ${BASE_DIR}/jbr
         cp -R ${BASE_DIR}/${JBR_BUNDLE} ${BASE_DIR}/jbr
+
     - name: Package Artifact
       run: |
         cd JetBrainsRuntime/build/linux-x86_64-normal-server-release/images
         zip -r jbr-linux-x64.zip ./jbr/*
         mv jbr-linux-x64.zip ../../../../
+
     - name: Upload Artifact
       uses: actions/upload-artifact@master
       with:
@@ -149,4 +134,3 @@ jobs:
         asset_path: ./jbr-linux-x64.zip
         asset_name: ${{ steps.gen_info.outputs.release_name }}.zip
         asset_content_type: application/zip
-
