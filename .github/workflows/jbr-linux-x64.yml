@@ -28,8 +28,15 @@ jobs:
             make mercurial pkg-config ruby tree x11proto-core-dev x11proto-xf86vidmode-dev zip
         sudo -E apt-get autoremove -y --purge
         sudo -E apt-get clean -y
+        
+    - name: Setup Java JDK 11
+      uses: actions/setup-java@v3.4.1
+      with:
+       java-version: 11
+       distribution: 'adopt'
+    - run: echo "JDK_11=$JAVA_HOME" >> $GITHUB_ENV
     
-    - name: Setup Java JDK
+    - name: Setup Java JDK 17
       uses: actions/setup-java@v3.4.1
       with:
        java-version: 17
@@ -49,7 +56,7 @@ jobs:
 
     - name: Compile JCEF
       env:
-        JDK_17: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64
+        #JDK_11: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64
         ANT_HOME: /usr/share/ant
       run: |
         git clone https://github.com/JetBrains/jcef.git jcef
