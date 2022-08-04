@@ -49,7 +49,10 @@ jobs:
         ANT_HOME: /usr/share/ant
       run: |
         git clone https://github.com/JetBrains/jcef.git jcef
-        cd jcef/jb/tools/linux && chmod +x *
+        cd jcef
+        # reset to commit 4ef9139
+        git reset --hard 4ef9139
+        cd jb/tools/linux && chmod +x *
         ./build.sh all
 
     - name: List Paths
