@@ -73,9 +73,9 @@ jobs:
       run: |
         aria2c -o jbrsdk_jcef.tgz 'https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk_jcef-${{ steps.vars.outputs.JBSDK_VERSION }}-linux-x64-b${{ steps.vars.outputs.build_number }}.tar.gz'
         mkdir jcef_linux_x64
-        tar -zxvf jbrsdk_jcef.tgz --strip-components=1 -C jcef_linux_x64 --wildcards -- 'jbrsdk_jcef-*/jmods/gluegen.rt.jmod' 'jbrsdk_jcef-*/jmods/jogl.all.jmod' 'jbrsdk_jcef-*/jmods/jcef.jmod'
+        tar -zxvf jbrsdk_jcef.tgz --strip-components=1 -C jcef_linux_x64 --wildcards -- 'jbrsdk_jcef-*/jmods/gluegen.rt.jmod' 'jbrsdk_jcef-*/jmods/jogl.all.jmod' 'jbrsdk_jcef-*/jmods/jcef.jmod' 'jbrsdk_jcef-*/release'
         rm -f jbrsdk_jcef.tgz
-        cat jcef_linux_x64/release >> jcef_linux_x64/jcef.version
+        cat jcef_linux_x64/release > jcef_linux_x64/jcef.version
 
     - name: Clone JBR Repository
       uses: actions/checkout@v3
